@@ -1,0 +1,224 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+## Load Required Libraries
+```{r message=TRUE, warning=FALSE}
+library(tidyverse)
+library(tidymodels)
+library(ggpubr)
+set.seed(400)
+```
+
+## Read Exploration Data
+```{r}
+data_exploration <- read_csv("data/splits/data_exploration.csv")
+```
+
+## Count Number of Missing Values
+```{r}
+data_exploration %>%
+  sapply(function(x) sum(is.na(x)))
+```
+
+## Explore Potential Features
+
+### Define Functions
+```{r}
+visualize_categorical_distribution <- function(data, feature){
+  feature <- enquo(feature)
+  data %>%
+  ggplot() +
+    geom_bar(mapping = aes(y = !!feature))
+}
+```
+
+```{r}
+visualize_categorical_relationship <- function(data, feature, label = HeartDisease){
+  feature <- enquo(feature)
+  label <- enquo(label)
+  
+  data %>%
+    select(!!feature, !!label) %>%
+    group_by(!!feature, !!label) %>%
+    summarize(Count = n()) %>%
+    ggplot() + 
+    geom_bar(mapping = aes(y = !!feature, x = Count, fill = !!label),
+             position = "fill",
+             stat="identity")
+}
+```
+
+```{r}
+visualize_categorical <- function(data, feature, label = HeartDisease){
+  feature <- enquo(feature)
+  label <- enquo(label)
+  
+  ggarrange(
+    data %>% visualize_categorical_distribution(!!feature),
+    data %>% visualize_categorical_relationship(!!feature, !!label),
+    nrow = 1,
+    ncol = 2,
+    common.legend = TRUE, 
+    legend = "bottom"
+  )
+}
+```
+
+```{r}
+visualize_numerical_distribution <- function(data, feature){
+  feature <- enquo(feature)
+  
+  data %>%
+  ggplot() +
+    geom_histogram(mapping = aes(x = !!feature), bins = 10)
+}
+```
+
+```{r}
+visualize_numerical_relationship <- function(data, feature, label = HeartDisease){
+  feature <- enquo(feature)
+  label <- enquo(label)
+  
+  data %>%
+  ggplot() +
+    geom_density(mapping = aes(x = !!feature, fill = !!label),
+                 alpha = 0.5, adjust = 4)
+  
+}
+```
+
+```{r}
+visualize_numerical <- function(data, feature, label = HeartDisease){
+  feature <- enquo(feature)
+  label <- enquo(label)
+  
+  ggarrange(
+    data %>% visualize_numerical_distribution(!!feature),
+    data %>% visualize_numerical_relationship(!!feature, !!label),
+    nrow = 1,
+    ncol = 2,
+    common.legend = TRUE, 
+    legend = "bottom"
+  )
+}
+```
+
+### Visualize Categorical Features     
+```{r}
+data_exploration %>%
+  visualize_categorical(Smoking)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(AlcoholDrinking)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(Stroke)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(DiffWalking)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(Sex)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(AgeCategory)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(Race)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(Diabetic)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(PhysicalActivity)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(GenHealth)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(Asthma)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(KidneyDisease)
+```
+
+```{r}
+data_exploration %>%
+  visualize_categorical(SkinCancer)
+```
+
+### Visualize Numerical Features
+```{r}
+data_exploration %>%
+  visualize_numerical(BMI)
+```
+
+```{r}
+data_exploration %>%
+  visualize_numerical(PhysicalHealth)
+```
+
+```{r}
+data_exploration %>%
+  visualize_numerical(MentalHealth)
+```
+
+```{r}
+data_exploration %>%
+  visualize_numerical(SleepTime)
+```
+
+## Summarize Observations
+
+Features w/ many missing values
+*None*
+
+Skewed Features
+- BMI
+- PhysicalHealth
+- MentalHealth
+
+Imbalanced Features
+- Smoking
+- AlcoholDrinking
+- Stroke
+- DiffWalking
+- Race
+- Diabetic
+- PhysicalActivity
+- GenHealth
+- Asthma
+- KidneyDisease
+- SkinCancer
+
+Features w/o potential relationship to label
+- None
+
+Demographic Variables
+- Sex
+- AgeCategory
+- Race
+
