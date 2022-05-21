@@ -19,9 +19,7 @@ data_original <- read_csv("data/heart_2020_cleaned.csv")
 ```{r}
 data_split <- initial_split(data_original, prop = 0.95)
 data_remaining <- training(data_split)
-
 data_exploration <- testing(data_split)
-
 ```
 
 ## Check distribution of label (`HeartDisease`)
@@ -31,20 +29,11 @@ data_exploration %>%
     geom_bar(mapping = aes(x = HeartDisease))
 ```
 
-## Create Test set
-```{r}
-data_split <- initial_split(data_remaining, prop = 0.95, strata = HeartDisease)
-data_remaining <- training(data_split)
-
-data_test <- testing(data_split)
-```
-
-## Create Training and Validation sets
+## Create Train and Test set
 ```{r}
 data_split <- initial_split(data_remaining, prop = 0.95, strata = HeartDisease)
 data_train <- training(data_split)
-
-data_validation <- testing(data_split)
+data_test <- testing(data_split)
 ```
 
 ## Summarize Size of Splits
@@ -52,7 +41,6 @@ data_validation <- testing(data_split)
 print(paste("Full Set Size       :", nrow(data_original)))
 print(paste("Exploration Set Size:", nrow(data_exploration)))
 print(paste("Test Set Size:       ", nrow(data_test)))
-print(paste("Validation Set Size :", nrow(data_validation)))
 print(paste("Train Set Size      :", nrow(data_train)))
 ```
 
@@ -60,6 +48,5 @@ print(paste("Train Set Size      :", nrow(data_train)))
 ```{r}
 data_exploration %>% write_csv(file = "data/splits/data_exploration.csv")
 data_test %>% write_csv(file = "data/splits/data_test.csv")
-data_validation %>% write_csv(file = "data/splits/data_validation.csv")
 data_train %>% write_csv(file = "data/splits/data_train.csv")
 ```
