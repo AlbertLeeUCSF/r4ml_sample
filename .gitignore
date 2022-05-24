@@ -4,3 +4,5 @@
 .Ruserdata
 .Rprofile
 *.nb.html
+.DS_Store
+*knit*
