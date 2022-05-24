@@ -1,0 +1,118 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Load Required Libraries
+```{r message=TRUE, warning=FALSE}
+library(tidyverse)
+library(tidymodels)
+set.seed(400)
+```
+
+# Read Training Data
+```{r}
+data_train <- read_csv("data/splits/data_train.csv")
+```
+
+# Set Up Evaluation
+```{r}
+train_eval <- bootstraps(data_train, times = 25, strata = HeartDisease)
+train_eval
+```
+
+# Train and Evaluate Baseline Models
+
+## Null Model (Predict Most Common Class)
+```{r}
+null_rec <- data_train %>%
+  recipe(HeartDisease ~ .) %>%
+  step_impute_mode(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_impute_mean(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+
+null_mdl <- null_model() %>%
+  set_engine("parsnip") %>%
+  set_mode("classification")
+
+null_wf <- workflow() %>%
+  add_recipe(null_rec) %>%
+  add_model(null_mdl)
+```
+
+```{r}
+null_fit <- null_wf %>%
+  fit_resamples(train_eval, control = control_resamples(save_pred = TRUE))
+```
+
+```{r}
+null_confusion <- conf_mat_resampled(null_fit)
+null_confusion
+```
+
+```{r}
+null_metrics <- collect_metrics(null_fit)
+null_metrics
+```
+
+## Logistic Regression Model on a Few Variable
+```{r}
+lr_baseline_rec <- data_train %>%
+  recipe(HeartDisease ~ BMI + Smoking) %>%
+  step_impute_mode(all_nominal_predictors()) %>%
+  step_dummy(all_nominal_predictors()) %>%
+  step_impute_mean(all_numeric_predictors()) %>%
+  step_normalize(all_numeric_predictors())
+
+lr_baseline_mdl <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+lr_baseline_wf <- workflow() %>%
+  add_recipe(lr_baseline_rec) %>%
+  add_model(lr_baseline_mdl)
+```
+
+```{r}
+lr_baseline_fit <- lr_baseline_wf %>%
+  fit_resamples(train_eval, control = control_resamples(save_pred = TRUE))
+```
+
+```{r}
+lr_baseline_confusion <- conf_mat_resampled(lr_baseline_fit)
+lr_baseline_confusion
+```
+
+```{r}
+lr_baseline_metrics <- collect_metrics(lr_baseline_fit)
+lr_baseline_metrics
+```
+
+
+# Create Baseline Workflow Sets
+
+```{r}
+baseline_models <- 
+  workflow_set(
+    preproc = list(few_var = lr_baseline_rec, all_var = null_rec),
+    models = list(null = null_mdl, lr_baseline = lr_baseline_mdl),
+    cross = TRUE
+  ) %>% 
+  anti_join(tibble(wflow_id = c("all_var_null")), by = "wflow_id")
+```
+
+```{r}
+baseline_models <- baseline_models %>% 
+  workflow_map(
+    "fit_resamples", 
+    verbose = TRUE,
+    resamples = train_eval, 
+    control = control_resamples(save_pred = TRUE)
+  )
+```
+
+```{r}
+baseline_metrics <- collect_metrics(baseline_models)
+baseline_metrics
+```
