@@ -23,16 +23,16 @@ visualize_categorical <- function(data, feature, label = HeartDisease){
       ggplot() + 
       geom_bar(mapping = aes(y = !!feature, x = Count, fill = !!label),
                position = "fill",
-               stat="identity")
+               stat="identity") + 
+      theme(axis.title.y=element_blank()) +
+      labs(x = "proportion")
   }
   
-  ggarrange(
-    data %>% visualize_categorical_distribution(!!feature),
-    data %>% visualize_categorical_relationship(!!feature, !!label),
-    nrow = 1,
-    ncol = 2,
-    common.legend = TRUE, 
-    legend = "bottom"
-  )
+  ggarrange(data %>% visualize_categorical_distribution(!!feature),
+            data %>% visualize_categorical_relationship(!!feature, !!label),
+            nrow = 1,
+            ncol = 2,
+            common.legend = TRUE,
+            legend = "bottom")
 }
 
