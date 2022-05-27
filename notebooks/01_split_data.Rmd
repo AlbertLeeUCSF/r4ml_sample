@@ -12,7 +12,7 @@ set.seed(400)
 ## Read Data
 ```{r}
 # https://www.kaggle.com/datasets/kamilpytlak/personal-key-indicators-of-heart-disease
-data_original <- read_csv("data/heart_2020_cleaned.csv")
+data_original <- read_csv("../data/heart_2020_cleaned.csv")
 ```
 
 ```{r}
@@ -36,6 +36,9 @@ data_exploration <- testing(data_split)
 data_exploration %>%
   ggplot() +
     geom_bar(mapping = aes(x = HeartDisease))
+
+ggsave(filename = "HeartDisease.png", path = "../results/exploration_plots", 
+       device = "png")
 ```
 
 ## Create Train and Test set
@@ -55,7 +58,7 @@ print(paste("Train Set Size      :", nrow(data_train)))
 
 ## Save Splits
 ```{r}
-data_exploration %>% write_csv(file = "data/splits/data_exploration.csv")
-data_test %>% write_csv(file = "data/splits/data_test.csv")
-data_train %>% write_csv(file = "data/splits/data_train.csv")
+data_exploration %>% write_csv(file = "../data/splits/data_exploration.csv")
+data_test %>% write_csv(file = "../data/splits/data_test.csv")
+data_train %>% write_csv(file = "../data/splits/data_train.csv")
 ```
