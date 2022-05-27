@@ -1,0 +1,4 @@
+.estimator,n,.config,model,mean_pr_auc,mean_recall,mean_precision,std_err_pr_auc,std_err_recall,std_err_precision
+binary,30,Preprocessor1_Model1,Null,0.5427837872892676,0,NA,7.218596813191533e-5,0,NA
+binary,30,Preprocessor1_Model1,Logistic Regression (w/ Few Variables),0.12291889184282924,0,NA,2.808051756007523e-4,0,NA
+binary,30,Preprocessor1_Model1,Logistic Regression (w/ All Variables),0.3458467357213483,0.10655088218180903,0.5463037858687335,7.384632590181574e-4,4.4710747033542455e-4,0.001640962850265759

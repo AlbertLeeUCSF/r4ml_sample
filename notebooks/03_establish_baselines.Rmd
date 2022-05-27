@@ -12,7 +12,7 @@ set.seed(400)
 
 # Read Training Data
 ```{r}
-data_train <- read_csv("data/splits/data_train.csv") %>%
+data_train <- read_csv("../data/splits/data_train.csv") %>%
   mutate(HeartDisease = factor(HeartDisease, levels = c("Yes", "No")))
 
 data_train
@@ -136,6 +136,9 @@ baseline_metrics <- null_metrics %>%
   pivot_wider(names_from = .metric,
               values_from = c(mean, std_err))
   
-
 baseline_metrics
+```
+
+```{r}
+baseline_metrics %>% write_csv(file = "../results/baseline_metrics/baseline_metrics.csv")
 ```
