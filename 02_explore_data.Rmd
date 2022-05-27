@@ -5,14 +5,15 @@ output: html_notebook
 ## Load Required Libraries
 ```{r message=TRUE, warning=FALSE}
 library(tidyverse)
-library(tidymodels)
-library(ggpubr)
+source("scripts/visualize_categorical.R")
+source("scripts/visualize_numerical.R")
 set.seed(400)
 ```
 
 ## Read Exploration Data
 ```{r}
-data_exploration <- read_csv("data/splits/data_exploration.csv")
+data_exploration <- read_csv("data/splits/data_exploration.csv") %>%
+  mutate(HeartDisease = factor(HeartDisease, levels = c("Yes", "No")))
 ```
 
 ## Count Number of Missing Values
@@ -23,202 +24,123 @@ data_exploration %>%
 
 ## Explore Potential Features
 
-### Define Functions
-```{r}
-visualize_categorical_distribution <- function(data, feature){
-  feature <- enquo(feature)
-  data %>%
-  ggplot() +
-    geom_bar(mapping = aes(y = !!feature))
-}
-```
-
-```{r}
-visualize_categorical_relationship <- function(data, feature, label = HeartDisease){
-  feature <- enquo(feature)
-  label <- enquo(label)
-  
-  data %>%
-    select(!!feature, !!label) %>%
-    group_by(!!feature, !!label) %>%
-    summarize(Count = n()) %>%
-    ggplot() + 
-    geom_bar(mapping = aes(y = !!feature, x = Count, fill = !!label),
-             position = "fill",
-             stat="identity")
-}
-```
-
-```{r}
-visualize_categorical <- function(data, feature, label = HeartDisease){
-  feature <- enquo(feature)
-  label <- enquo(label)
-  
-  ggarrange(
-    data %>% visualize_categorical_distribution(!!feature),
-    data %>% visualize_categorical_relationship(!!feature, !!label),
-    nrow = 1,
-    ncol = 2,
-    common.legend = TRUE, 
-    legend = "bottom"
-  )
-}
-```
-
-```{r}
-visualize_numerical_distribution <- function(data, feature){
-  feature <- enquo(feature)
-  
-  data %>%
-  ggplot() +
-    geom_histogram(mapping = aes(x = !!feature), bins = 10)
-}
-```
-
-```{r}
-visualize_numerical_relationship <- function(data, feature, label = HeartDisease){
-  feature <- enquo(feature)
-  label <- enquo(label)
-  
-  data %>%
-  ggplot() +
-    geom_density(mapping = aes(x = !!feature, fill = !!label),
-                 alpha = 0.5, adjust = 4)
-  
-}
-```
-
-```{r}
-visualize_numerical <- function(data, feature, label = HeartDisease){
-  feature <- enquo(feature)
-  label <- enquo(label)
-  
-  ggarrange(
-    data %>% visualize_numerical_distribution(!!feature),
-    data %>% visualize_numerical_relationship(!!feature, !!label),
-    nrow = 1,
-    ncol = 2,
-    common.legend = TRUE, 
-    legend = "bottom"
-  )
-}
-```
-
 ### Visualize Categorical Features     
 ```{r}
 data_exploration %>%
   visualize_categorical(Smoking)
+
+ggsave(filename = "Smoking.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(AlcoholDrinking)
+
+ggsave(filename = "AlcoholDrinking.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(Stroke)
+
+ggsave(filename = "Stroke.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(DiffWalking)
+
+ggsave(filename = "DiffWalking.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(Sex)
+
+ggsave(filename = "Sex.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(AgeCategory)
+
+ggsave(filename = "AgeCategory.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(Race)
+
+ggsave(filename = "Race.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(Diabetic)
+
+ggsave(filename = "Diabetic.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(PhysicalActivity)
+
+ggsave(filename = "PhysicalActivity.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(GenHealth)
+
+ggsave(filename = "GenHealth.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(Asthma)
+
+ggsave(filename = "Asthma.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(KidneyDisease)
+
+ggsave(filename = "KidneyDisease.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_categorical(SkinCancer)
+
+ggsave(filename = "SkinCancer.png", path = "results/exploration_plots", device = "png")
 ```
 
 ### Visualize Numerical Features
 ```{r}
 data_exploration %>%
   visualize_numerical(BMI)
+
+ggsave(filename = "BMI.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_numerical(PhysicalHealth)
+
+ggsave(filename = "PhysicalHealth.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_numerical(MentalHealth)
+
+ggsave(filename = "MentalHealth.png", path = "results/exploration_plots", device = "png")
 ```
 
 ```{r}
 data_exploration %>%
   visualize_numerical(SleepTime)
+
+ggsave(filename = "SleepTime.png", path = "results/exploration_plots", device = "png")
 ```
-
-## Summarize Observations
-
-Features w/ many missing values
-*None*
-
-Skewed Features
-- BMI
-- PhysicalHealth
-- MentalHealth
-
-Imbalanced Features
-- Smoking
-- AlcoholDrinking
-- Stroke
-- DiffWalking
-- Race
-- Diabetic
-- PhysicalActivity
-- GenHealth
-- Asthma
-- KidneyDisease
-- SkinCancer
-
-Features w/o potential relationship to label
-- None
-
-Demographic Variables
-- Sex
-- AgeCategory
-- Race
-
