@@ -15,6 +15,15 @@ set.seed(400)
 data_original <- read_csv("data/heart_2020_cleaned.csv")
 ```
 
+```{r}
+data_original <- data_original %>%
+  mutate(HeartDisease = factor(HeartDisease, levels = c("Yes", "No")))
+```
+
+```{r}
+data_original
+```
+
 ## Create Exploration set
 ```{r}
 data_split <- initial_split(data_original, prop = 0.95)
