@@ -12,13 +12,26 @@ set.seed(400)
 
 # Read Training Data
 ```{r}
-data_train <- read_csv("data/splits/data_train.csv")
+data_train <- read_csv("data/splits/data_train.csv") %>%
+  mutate(HeartDisease = factor(HeartDisease, levels = c("Yes", "No")))
+
+data_train
 ```
 
 # Set Up Evaluation
 ```{r}
-train_eval <- bootstraps(data_train, times = 25, strata = HeartDisease)
+train_eval <- vfold_cv(data_train, 
+                       strata = HeartDisease,
+                       v = 3, 
+                       repeats = 10)
 train_eval
+```
+
+```{r}
+eval_metrics <- metric_set(pr_auc, 
+                           precision, 
+                           recall)
+eval_metrics
 ```
 
 # Train and Evaluate Baseline Models
@@ -27,10 +40,9 @@ train_eval
 ```{r}
 null_rec <- data_train %>%
   recipe(HeartDisease ~ .) %>%
-  step_impute_mode(all_nominal_predictors()) %>%
-  step_dummy(all_nominal_predictors()) %>%
+  step_impute_mode(all_nominal_predictors()) %>% 
   step_impute_mean(all_numeric_predictors()) %>%
-  step_normalize(all_numeric_predictors())
+  step_dummy(all_nominal_predictors())
 
 null_mdl <- null_model() %>%
   set_engine("parsnip") %>%
@@ -43,76 +55,87 @@ null_wf <- workflow() %>%
 
 ```{r}
 null_fit <- null_wf %>%
-  fit_resamples(train_eval, control = control_resamples(save_pred = TRUE))
-```
+  fit_resamples(train_eval, 
+                control = control_resamples(save_pred = TRUE),
+                metrics = eval_metrics)
 
-```{r}
 null_confusion <- conf_mat_resampled(null_fit)
 null_confusion
-```
 
-```{r}
-null_metrics <- collect_metrics(null_fit)
+null_metrics <- collect_metrics(null_fit) %>% mutate(model = "Null")
 null_metrics
 ```
 
 ## Logistic Regression Model on a Few Variable
 ```{r}
-lr_baseline_rec <- data_train %>%
+lr_few_var_rec <- data_train %>%
   recipe(HeartDisease ~ BMI + Smoking) %>%
-  step_impute_mode(all_nominal_predictors()) %>%
-  step_dummy(all_nominal_predictors()) %>%
+  step_impute_mode(all_nominal_predictors()) %>% 
   step_impute_mean(all_numeric_predictors()) %>%
-  step_normalize(all_numeric_predictors())
+  step_dummy(all_nominal_predictors())
 
-lr_baseline_mdl <- logistic_reg() %>%
+lr_few_var_mdl <- logistic_reg() %>%
   set_engine("glm") %>%
   set_mode("classification")
 
-lr_baseline_wf <- workflow() %>%
-  add_recipe(lr_baseline_rec) %>%
-  add_model(lr_baseline_mdl)
+lr_few_var_wf <- workflow() %>%
+  add_recipe(lr_few_var_rec) %>%
+  add_model(lr_few_var_mdl)
 ```
 
 ```{r}
-lr_baseline_fit <- lr_baseline_wf %>%
-  fit_resamples(train_eval, control = control_resamples(save_pred = TRUE))
+lr_few_var_fit <- lr_few_var_wf %>%
+  fit_resamples(train_eval, 
+                control = control_resamples(save_pred = TRUE),
+                metrics = eval_metrics)
+
+lr_few_var_confusion <- conf_mat_resampled(lr_few_var_fit)
+lr_few_var_confusion
+
+lr_few_var_metrics <- collect_metrics(lr_few_var_fit) %>% mutate(model = "Logistic Regression (w/ Few Variables)")
+lr_few_var_metrics
+```
+
+## Logistic Regression Model on All Variable
+
+```{r}
+lr_all_var_rec <- data_train %>%
+  recipe(HeartDisease ~ .) %>%
+  step_impute_mode(all_nominal_predictors()) %>% 
+  step_impute_mean(all_numeric_predictors()) %>%
+  step_dummy(all_nominal_predictors())
+
+lr_all_var_mdl <- logistic_reg() %>%
+  set_engine("glm") %>%
+  set_mode("classification")
+
+lr_all_var_wf <- workflow() %>%
+  add_recipe(lr_all_var_rec) %>%
+  add_model(lr_all_var_mdl)
 ```
 
 ```{r}
-lr_baseline_confusion <- conf_mat_resampled(lr_baseline_fit)
-lr_baseline_confusion
+lr_all_var_fit <- lr_all_var_wf %>%
+  fit_resamples(train_eval, 
+                control = control_resamples(save_pred = TRUE),
+                metrics = eval_metrics)
+
+lr_all_var_confusion <- conf_mat_resampled(lr_all_var_fit)
+lr_all_var_confusion
+
+lr_all_var_metrics <- collect_metrics(lr_all_var_fit) %>% mutate(model = "Logistic Regression (w/ All Variables)")
+lr_all_var_metrics
 ```
 
+# Save Baseline Results
 ```{r}
-lr_baseline_metrics <- collect_metrics(lr_baseline_fit)
-lr_baseline_metrics
-```
+baseline_metrics <- null_metrics %>%
+  rbind(lr_few_var_metrics) %>%
+  rbind(lr_all_var_metrics) %>%
+  filter(n != 0) %>%
+  pivot_wider(names_from = .metric,
+              values_from = c(mean, std_err))
+  
 
-
-# Create Baseline Workflow Sets
-
-```{r}
-baseline_models <- 
-  workflow_set(
-    preproc = list(few_var = lr_baseline_rec, all_var = null_rec),
-    models = list(null = null_mdl, lr_baseline = lr_baseline_mdl),
-    cross = TRUE
-  ) %>% 
-  anti_join(tibble(wflow_id = c("all_var_null")), by = "wflow_id")
-```
-
-```{r}
-baseline_models <- baseline_models %>% 
-  workflow_map(
-    "fit_resamples", 
-    verbose = TRUE,
-    resamples = train_eval, 
-    control = control_resamples(save_pred = TRUE)
-  )
-```
-
-```{r}
-baseline_metrics <- collect_metrics(baseline_models)
 baseline_metrics
 ```
